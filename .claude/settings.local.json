@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx shadcn@latest add input card badge skeleton separator scroll-area --yes)",
+      "Bash(npm install:*)",
+      "Bash(npm list:*)"
+    ]
+  }
+}

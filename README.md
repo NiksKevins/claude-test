@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Weather App
 
-## Getting Started
+A production-ready weather app built with Next.js 16 (App Router), TypeScript, Tailwind CSS, and shadcn/ui. Powered entirely by free, open APIs — no API keys required.
 
-First, run the development server:
+## Running locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How location detection works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+On every visit the app runs this priority chain:
 
-## Learn More
+1. **Saved location** — if you previously searched or used GPS, the choice is persisted in `localStorage` and restored immediately so the UI loads fast.
+2. **IP geolocation** — the client fetches `/api/location`, a Next.js Route Handler that reads Vercel's injected geo headers (`x-vercel-ip-latitude`, `x-vercel-ip-longitude`, etc.) and returns an approximate position. The coordinates are then reverse-geocoded via Open-Meteo Geocoding to get a city name.
+3. **Default city** — if both of the above fail (e.g. running locally where Vercel headers are absent), the app falls back to **Riga, Latvia**. Change `DEFAULT_LOCATION` in `lib/location.ts` to use a different city.
+4. **Precise GPS** — users can click **"Use my current location"** at any time to trigger `navigator.geolocation`. This is always opt-in; the app never requests GPS automatically on page load.
 
-To learn more about Next.js, take a look at the following resources:
+## How the IP fallback works on Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Vercel's Edge Network automatically adds geo-enriched headers to every incoming request:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Header | Content |
+|---|---|
+| `x-vercel-ip-latitude` | Decimal latitude of the client IP |
+| `x-vercel-ip-longitude` | Decimal longitude |
+| `x-vercel-ip-city` | City name (URL-encoded) |
+| `x-vercel-ip-country` | ISO 3166-1 alpha-2 country code |
+| `x-vercel-ip-country-region` | Region / state code |
+| `x-vercel-ip-timezone` | IANA timezone string |
 
-## Deploy on Vercel
+The Route Handler at `app/api/location/route.ts` reads these headers and returns them as JSON. No third-party geolocation service or API key is needed. Locally the headers are absent, so the route returns `{ location: null }` and the app falls back to the default city.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## APIs used
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| API | Purpose | Docs |
+|---|---|---|
+| **Open-Meteo Forecast** | Current conditions, hourly & 7-day forecast | https://open-meteo.com/en/docs |
+| **Open-Meteo Geocoding** | City search autocomplete & reverse geocoding | https://open-meteo.com/en/docs/geocoding-api |
+
+Both APIs are free, require no authentication, and have generous rate limits.
+
+## Architecture
+
+```
+app/
+  page.tsx                  # Thin server component — renders WeatherApp
+  layout.tsx                # Root layout: fonts, Toaster
+  api/location/route.ts     # IP geolocation Route Handler (Vercel headers)
+  globals.css               # Tailwind + glassmorphism utility class
+
+components/
+  WeatherApp.tsx            # Root client component; wires hooks to UI
+  search/
+    LocationSearch.tsx      # Debounced search input with keyboard nav
+  weather/
+    CurrentWeather.tsx      # Big temperature display, location, time
+    HourlyForecast.tsx      # Horizontally scrollable 24h strip
+    DailyForecast.tsx       # 7-day list with temperature range bar
+    WeatherMetrics.tsx      # Humidity, wind, UV, sunrise/sunset cards
+    WeatherIcon.tsx         # Maps WMO weather codes to Lucide icons
+    WeatherSkeleton.tsx     # Loading skeleton layout
+
+hooks/
+  useLocation.ts            # Location state machine (GPS / IP / saved / default)
+  useWeather.ts             # Fetches weather for the active location
+  useSearch.ts              # Debounced geocoding search state
+  useUnits.ts               # C/F and km/h/mph toggle, persisted in localStorage
+
+lib/
+  weather.ts                # Open-Meteo forecast fetch + response normalisation
+  geocoding.ts              # Open-Meteo geocoding fetch helpers
+  weather-codes.ts          # WMO code to label, icon name, background gradient
+  units.ts                  # Temperature and wind speed conversion utilities
+  location.ts               # Location normalisation, localStorage persistence
+
+types/
+  weather.ts                # WeatherResponse, ProcessedWeather, ProcessedDay, etc.
+  location.ts               # Location, GeocodingResult, Coordinates, LocationSource
+```
+
+## Deploying to Vercel
+
+Push to GitHub and import the repository in the Vercel dashboard. No environment variables are required — everything uses public APIs. The IP geolocation fallback works automatically on Vercel without any additional configuration.
