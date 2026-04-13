@@ -5,8 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="35ffb374-dc3f-4b45-b447-198945110024" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/WeatherApp.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/WeatherApp.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/weather/HourlyForecast.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/weather/HourlyForecast.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/weather.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/weather.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/types/weather.ts" beforeDir="false" afterPath="$PROJECT_DIR$/types/weather.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,7 +73,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1776106149992</updated>
-      <workItem from="1776106151023" duration="2411000" />
+      <workItem from="1776106151023" duration="3185000" />
     </task>
     <servers />
   </component>

@@ -117,7 +117,6 @@ export function WeatherApp() {
             <HourlyForecast
               hours={weather.hourly}
               tempUnit={tempUnit}
-              timezone={location.timezone}
             />
 
             {today && (

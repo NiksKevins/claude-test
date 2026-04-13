@@ -56,7 +56,8 @@ export interface WeatherResponse {
 }
 
 export interface ProcessedHour {
-  time: Date
+  /** ISO local-time string from Open-Meteo, e.g. "2024-04-13T14:00" — already in location's timezone */
+  time: string
   temperature: number
   apparentTemperature: number
   precipitationProbability: number

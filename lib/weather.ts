@@ -68,28 +68,37 @@ export async function fetchWeather(coords: Coordinates): Promise<ProcessedWeathe
   return processWeatherResponse(data)
 }
 
+/**
+ * Open-Meteo returns local-time ISO strings (e.g. "2024-04-13T14:00") when timezone=auto.
+ * To compare times we convert to real UTC ms: parse as-if-UTC then subtract the location's offset.
+ */
+function localISOtoUTCms(iso: string, utcOffsetSeconds: number): number {
+  return Date.parse(iso + ':00Z') - utcOffsetSeconds * 1000
+}
+
 function processWeatherResponse(data: WeatherResponse): ProcessedWeather {
   const { current, hourly, daily, timezone, utc_offset_seconds } = data
 
-  // Only keep the next 24 hours of hourly data starting from now
-  const nowTime = new Date(current.time + 'Z').getTime()
-  const cutoff = nowTime + 24 * 60 * 60 * 1000
+  const nowUTC = localISOtoUTCms(current.time, utc_offset_seconds)
+  // Floor to the current hour so the slot we're inside (e.g. 22:00 when it's 22:35) is included
+  const nowHourUTC = Math.floor(nowUTC / 3_600_000) * 3_600_000
+  const cutoffUTC = nowHourUTC + 24 * 60 * 60 * 1000
 
   const processedHourly: ProcessedHour[] = hourly.time
-    .map((t, i) => {
-      const time = new Date(t + ':00Z')
-      return {
-        time,
-        temperature: hourly.temperature_2m[i],
-        apparentTemperature: hourly.apparent_temperature[i],
-        precipitationProbability: hourly.precipitation_probability[i] ?? 0,
-        weatherCode: hourly.weather_code[i],
-        windSpeed: hourly.wind_speed_10m[i],
-        uvIndex: hourly.uv_index[i] ?? 0,
-        isDay: hourly.is_day[i] === 1,
-      } satisfies ProcessedHour
+    .map((t, i) => ({
+      time: t, // raw local-time ISO string — formatted in the UI without timezone conversion
+      temperature: hourly.temperature_2m[i],
+      apparentTemperature: hourly.apparent_temperature[i],
+      precipitationProbability: hourly.precipitation_probability[i] ?? 0,
+      weatherCode: hourly.weather_code[i],
+      windSpeed: hourly.wind_speed_10m[i],
+      uvIndex: hourly.uv_index[i] ?? 0,
+      isDay: hourly.is_day[i] === 1,
+    }))
+    .filter((h) => {
+      const utcMs = localISOtoUTCms(h.time, utc_offset_seconds)
+      return utcMs >= nowHourUTC && utcMs <= cutoffUTC
     })
-    .filter((h) => h.time.getTime() >= nowTime && h.time.getTime() <= cutoff)
 
   const processedDaily: ProcessedDay[] = daily.time.map((t, i) => ({
     date: new Date(t + 'T00:00:00Z'),
