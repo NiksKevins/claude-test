@@ -96,8 +96,9 @@ function processWeatherResponse(data: WeatherResponse): ProcessedWeather {
     weatherCode: daily.weather_code[i],
     tempMax: daily.temperature_2m_max[i],
     tempMin: daily.temperature_2m_min[i],
-    sunrise: new Date(daily.sunrise[i] + ':00Z'),
-    sunset: new Date(daily.sunset[i] + ':00Z'),
+    // Open-Meteo returns local-time strings when timezone=auto — store as-is, no UTC conversion
+    sunrise: daily.sunrise[i],
+    sunset: daily.sunset[i],
     precipitationSum: daily.precipitation_sum[i],
     precipitationProbabilityMax: daily.precipitation_probability_max[i] ?? 0,
     windSpeedMax: daily.wind_speed_10m_max[i],

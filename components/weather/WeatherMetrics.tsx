@@ -31,19 +31,20 @@ function MetricCard({ label, value, sub, icon }: MetricCardProps) {
   )
 }
 
+/** Format "2024-04-13T06:15" → "6:15 AM". No timezone conversion needed — the API string is already local time. */
+function formatLocalISOTime(iso: string): string {
+  const timePart = iso.slice(11, 16) // "06:15"
+  const [h, m] = timePart.split(':').map(Number)
+  const period = h >= 12 ? 'PM' : 'AM'
+  const hour12 = h % 12 || 12
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`
+}
+
 export function WeatherMetrics({ weather, today, windUnit }: WeatherMetricsProps) {
   const { current } = weather
 
-  const sunriseStr = today.sunrise.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: weather.timezone !== 'auto' ? weather.timezone : undefined,
-  })
-  const sunsetStr = today.sunset.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: weather.timezone !== 'auto' ? weather.timezone : undefined,
-  })
+  const sunriseStr = formatLocalISOTime(today.sunrise)
+  const sunsetStr = formatLocalISOTime(today.sunset)
 
   const metrics = [
     {

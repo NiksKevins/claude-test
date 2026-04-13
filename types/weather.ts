@@ -71,8 +71,10 @@ export interface ProcessedDay {
   weatherCode: number
   tempMax: number
   tempMin: number
-  sunrise: Date
-  sunset: Date
+  /** ISO local-time string from Open-Meteo, e.g. "2024-04-13T06:15" — already in location's timezone */
+  sunrise: string
+  /** ISO local-time string from Open-Meteo, e.g. "2024-04-13T20:45" — already in location's timezone */
+  sunset: string
   precipitationSum: number
   precipitationProbabilityMax: number
   windSpeedMax: number
